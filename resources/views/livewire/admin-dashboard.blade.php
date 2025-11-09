@@ -51,7 +51,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <span class="text-sm text-gray-500">Out of 500 seats</span>
+                <span class="text-sm text-gray-500">Out of {{ number_format($totalQRCodes) }} seats</span>
             </div>
         </div>
 
@@ -111,7 +111,23 @@
     </div>
 
     <!-- Action Buttons -->
+
     <div class="mb-8 flex flex-wrap gap-4">
+           @php
+        $sheetsService = app(\App\Services\GoogleSheetsService::class);
+    @endphp
+    
+    @if($sheetsService->isConfigured())
+        <a href="{{ $sheetsService->getSheetUrl() }}" 
+           target="_blank"
+           class="inline-flex items-center px-4 py-2 font-semibold rounded-lg transition shadow-md" 
+           style="background-color: #34A853; color: white;">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3h5v2h-5V6zm0 4h5v2h-5v-2zm0 4h5v2h-5v-2zM7 6h3v2H7V6zm0 4h3v2H7v-2zm0 4h3v2H7v-2z"/>
+            </svg>
+            Google Sheet
+        </a>
+    @endif
         <button wire:click="exportToCSV" 
                 class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-md">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +136,7 @@
             Export CSV
         </button>
 
-        <button wire:click="resetQRCodes" 
+        {{-- <button wire:click="resetQRCodes" 
                 class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-md">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -134,7 +150,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             Refresh Data
-        </button>
+        </button> --}}
     </div>
 
     <!-- Quick Actions Cards -->

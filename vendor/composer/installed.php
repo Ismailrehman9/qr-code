@@ -3,7 +3,7 @@
         'name' => 'interactive/giveaway-system',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '17a1417a21383257d1f8afa603e3e862a4f4bee5',
+        'reference' => 'e7f3d4906b01abd7eb5d68f0f45ecf6a27bd91c2',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -421,7 +421,7 @@
         'interactive/giveaway-system' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '17a1417a21383257d1f8afa603e3e862a4f4bee5',
+            'reference' => 'e7f3d4906b01abd7eb5d68f0f45ecf6a27bd91c2',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

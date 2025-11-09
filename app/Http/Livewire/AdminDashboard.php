@@ -19,6 +19,8 @@ class AdminDashboard extends Component
     public $searchTerm = '';
     public $filterDate;
 
+    public $totalQRCodes; // Add this property at the top with other properties
+
     protected $listeners = ['refreshDashboard' => '$refresh'];
 
     public function mount()
@@ -50,6 +52,8 @@ class AdminDashboard extends Component
 
         // Submissions by hour (last 24 hours)
         $this->submissionsByHour = $this->getSubmissionsByHour();
+        // Total QR Codes
+        $this->totalQRCodes = \App\Models\QRCode::count();
     }
 
     protected function calculateAgeBracketStats()
