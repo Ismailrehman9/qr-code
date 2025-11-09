@@ -1,8 +1,22 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">Dashboard Overview</h2>
-        <p class="mt-2 text-gray-600">Real-time giveaway analytics and management</p>
+    <!-- Header with Logout -->
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900">Dashboard Overview</h2>
+            <p class="mt-2 text-gray-600">Real-time giveaway analytics and management</p>
+        </div>
+        <div class="flex items-center gap-4 ">
+            <span class="text-sm text-gray-600">Welcome, {{ auth()->user()->name }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition shadow-md">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Logout
+                </button>
+</form>
+        </div>
     </div>
 
     <!-- Flash Messages -->
@@ -121,6 +135,53 @@
             </svg>
             Refresh Data
         </button>
+    </div>
+
+    <!-- Quick Actions Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- QR Code Management -->
+        <div class="rounded-xl shadow-lg p-6 text-white" style="background: linear-gradient(to bottom right, rgb(168, 85, 247), rgb(79, 70, 229));">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold mb-2">QR Code Management</h3>
+                    <p class="mb-4" style="color: rgba(255, 255, 255, 0.9);">Generate, manage, and track all your QR codes</p>
+                    <a href="{{ route('admin.qr-codes') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-white font-semibold rounded-lg hover:bg-gray-50 transition shadow-md" style="color: rgb(147, 51, 234);">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                        </svg>
+                        Manage QR Codes
+                    </a>
+                </div>
+                <div class="hidden lg:block" style="opacity: 0.2;">
+                    <svg class="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submissions Management -->
+        <div class="rounded-xl shadow-lg p-6 text-white" style="background: linear-gradient(to bottom right, rgb(34, 197, 94), rgb(22, 163, 74));">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold mb-2">User Submissions</h3>
+                    <p class="mb-4" style="color: rgba(255, 255, 255, 0.9);">View all registered users and their data</p>
+                    <a href="{{ route('admin.submissions') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-white font-semibold rounded-lg hover:bg-gray-50 transition shadow-md" style="color: rgb(22, 163, 74);">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        View Submissions
+                    </a>
+                </div>
+                <div class="hidden lg:block" style="opacity: 0.2;">
+                    <svg class="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Charts Section -->
