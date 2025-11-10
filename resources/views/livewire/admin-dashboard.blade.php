@@ -200,20 +200,20 @@
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Age Bracket Distribution -->
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Age Distribution</h3>
-            <canvas id="ageBracketChart"></canvas>
-        </div>
-
-        <!-- Submissions by Hour -->
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Submissions (Last 24 Hours)</h3>
-            <canvas id="submissionsChart"></canvas>
-        </div>
+  <!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Age Bracket Distribution -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Age Distribution</h3>
+        <canvas id="ageBracketChart"></canvas>
     </div>
+
+    <!-- Submissions by Hour -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Submissions (Last 24 Hours)</h3>
+        <canvas id="submissionsChart"></canvas>
+    </div>
+</div>
 
     <!-- Recent Submissions Table -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -279,64 +279,135 @@
     </div>
 </div>
 
-@push('scripts')
 <script>
+// Wait for page to fully load
+window.addEventListener('load', function() {
+    console.log('Page loaded, initializing charts...');
+    
     // Age Bracket Chart
-    const ageBracketCtx = document.getElementById('ageBracketChart').getContext('2d');
-    new Chart(ageBracketCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {!! json_encode(array_keys($ageBracketStats)) !!},
-            datasets: [{
-                data: {!! json_encode(array_values($ageBracketStats)) !!},
-                backgroundColor: [
-                    '#818CF8', '#A78BFA', '#C084FC', '#E879F9', '#F472B6', '#FB923C', '#FBBF24'
-                ],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            }
-        }
-    });
-
-    // Submissions by Hour Chart
-    const submissionsCtx = document.getElementById('submissionsChart').getContext('2d');
-    new Chart(submissionsCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode(array_column($submissionsByHour, 'hour')) !!},
-            datasets: [{
-                label: 'Submissions',
-                data: {!! json_encode(array_column($submissionsByHour, 'count')) !!},
-                borderColor: '#6366F1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+    const ageBracketCanvas = document.getElementById('ageBracketChart');
+    if (ageBracketCanvas) {
+        console.log('Age bracket canvas found');
+        
+        const ageBracketData = {!! json_encode($ageBracketStats) !!};
+        console.log('Age bracket data:', ageBracketData);
+        
+        const labels = Object.keys(ageBracketData);
+        const data = Object.values(ageBracketData);
+        
+        // Check if there's data
+        const hasData = data.some(value => value > 0);
+        
+        if (hasData) {
+            new Chart(ageBracketCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#818CF8',
+                            '#A78BFA',
+                            '#C084FC',
+                            '#E879F9',
+                            '#F472B6',
+                            '#FB923C'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
                     }
                 }
-            }
+            });
+            console.log('Age bracket chart created');
+        } else {
+            // Show "No data" message
+            ageBracketCanvas.parentElement.innerHTML = '<div class="flex items-center justify-center h-64"><p class="text-gray-500">No data available yet. Submit some forms to see the age distribution.</p></div>';
         }
-    });
+    } else {
+        console.error('Age bracket canvas not found!');
+    }
+
+    // Submissions by Hour Chart
+    const submissionsCanvas = document.getElementById('submissionsChart');
+    if (submissionsCanvas) {
+        console.log('Submissions canvas found');
+        
+        const submissionsData = {!! json_encode($submissionsByHour) !!};
+        console.log('Submissions data:', submissionsData);
+        
+        const hours = submissionsData.map(item => item.hour);
+        const counts = submissionsData.map(item => item.count);
+        
+        // Check if there's data
+        const hasData = counts.some(value => value > 0);
+        
+        if (hasData) {
+            new Chart(submissionsCanvas, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Submissions',
+                        data: counts,
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#6366F1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Submissions chart created');
+        } else {
+            // Show "No data" message
+            submissionsCanvas.parentElement.innerHTML = '<div class="flex items-center justify-center h-64"><p class="text-gray-500">No submissions in the last 24 hours.</p></div>';
+        }
+    } else {
+        console.error('Submissions canvas not found!');
+    }
+});
 </script>
-@endpush

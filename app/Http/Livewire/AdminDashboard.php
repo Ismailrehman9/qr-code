@@ -5,7 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Submission;
 use App\Models\QRCode;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboard extends Component
 {
@@ -13,15 +13,10 @@ class AdminDashboard extends Component
     public $todaySubmissions;
     public $whatsappOptIns;
     public $uniqueSeats;
-    public $recentSubmissions;
+    public $totalQRCodes;
     public $ageBracketStats;
     public $submissionsByHour;
-    public $searchTerm = '';
-    public $filterDate;
-
-    public $totalQRCodes; // Add this property at the top with other properties
-
-    protected $listeners = ['refreshDashboard' => '$refresh'];
+    public $recentSubmissions;
 
     public function mount()
     {
@@ -30,85 +25,71 @@ class AdminDashboard extends Component
 
     public function loadDashboardData()
     {
-        // Total submissions
         $this->totalSubmissions = Submission::count();
-
-        // Today's submissions
         $this->todaySubmissions = Submission::whereDate('submitted_at', today())->count();
-
-        // WhatsApp opt-ins
         $this->whatsappOptIns = Submission::where('whatsapp_optin', true)->count();
-
-        // Unique seats used
         $this->uniqueSeats = Submission::distinct('seat_qr_id')->count();
+        $this->totalQRCodes = QRCode::count();
 
-        // Recent submissions (last 10)
+        // Age bracket statistics
+        $ageBrackets = Submission::select('age', DB::raw('count(*) as count'))
+            ->groupBy('age')
+            ->pluck('count', 'age')
+            ->toArray();
+
+        // Ensure all age brackets are present
+        $allBrackets = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
+        $this->ageBracketStats = [];
+        foreach ($allBrackets as $bracket) {
+            $this->ageBracketStats[$bracket] = $ageBrackets[$bracket] ?? 0;
+        }
+
+        // Submissions by hour (last 24 hours)
+        $this->submissionsByHour = Submission::select(
+                DB::raw('HOUR(submitted_at) as hour'),
+                DB::raw('count(*) as count')
+            )
+            ->where('submitted_at', '>=', now()->subHours(24))
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'hour' => str_pad($item->hour, 2, '0', STR_PAD_LEFT) . ':00',
+                    'count' => $item->count
+                ];
+            })
+            ->toArray();
+
+        // Fill missing hours with 0
+        $hours = [];
+        for ($i = 0; $i < 24; $i++) {
+            $hourStr = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
+            $found = false;
+            foreach ($this->submissionsByHour as $submission) {
+                if ($submission['hour'] === $hourStr) {
+                    $hours[] = $submission;
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $hours[] = ['hour' => $hourStr, 'count' => 0];
+            }
+        }
+        $this->submissionsByHour = $hours;
+
+        // Recent submissions
         $this->recentSubmissions = Submission::orderBy('submitted_at', 'desc')
             ->take(10)
             ->get();
-
-        // Age bracket statistics
-        $this->ageBracketStats = $this->calculateAgeBracketStats();
-
-        // Submissions by hour (last 24 hours)
-        $this->submissionsByHour = $this->getSubmissionsByHour();
-        // Total QR Codes
-        $this->totalQRCodes = \App\Models\QRCode::count();
-    }
-
-    protected function calculateAgeBracketStats()
-    {
-        $submissions = Submission::all();
-        $brackets = [
-            'Under 18' => 0,
-            '18-24' => 0,
-            '25-34' => 0,
-            '35-44' => 0,
-            '45-54' => 0,
-            '55-64' => 0,
-            '65+' => 0,
-        ];
-
-        foreach ($submissions as $submission) {
-            $age = Carbon::parse($submission->date_of_birth)->age;
-            
-            if ($age < 18) $brackets['Under 18']++;
-            elseif ($age < 25) $brackets['18-24']++;
-            elseif ($age < 35) $brackets['25-34']++;
-            elseif ($age < 45) $brackets['35-44']++;
-            elseif ($age < 55) $brackets['45-54']++;
-            elseif ($age < 65) $brackets['55-64']++;
-            else $brackets['65+']++;
-        }
-
-        return $brackets;
-    }
-
-    protected function getSubmissionsByHour()
-    {
-        $hours = [];
-        $startTime = now()->subHours(24);
-
-        for ($i = 0; $i < 24; $i++) {
-            $hourStart = $startTime->copy()->addHours($i);
-            $hourEnd = $hourStart->copy()->addHour();
-            
-            $count = Submission::whereBetween('submitted_at', [$hourStart, $hourEnd])->count();
-            
-            $hours[] = [
-                'hour' => $hourStart->format('H:00'),
-                'count' => $count,
-            ];
-        }
-
-        return $hours;
     }
 
     public function exportToCSV()
     {
         $submissions = Submission::all();
         
-        $filename = 'giveaway_submissions_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'submissions_' . date('Y-m-d_His') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -117,34 +98,23 @@ class AdminDashboard extends Component
         $callback = function() use ($submissions) {
             $file = fopen('php://output', 'w');
             
-            // Headers
-            fputcsv($file, [
-                'Timestamp',
-                'Seat/QR ID',
-                'Name',
-                'Phone',
-                'Email',
-                'Date of Birth',
-                'Age',
-                'WhatsApp Opt-in',
-                'Joke',
-            ]);
-
-            // Data
+            // Add CSV headers
+            fputcsv($file, ['Submitted At', 'Seat', 'Name', 'Email', 'Phone', 'Date of Birth', 'Age', 'WhatsApp Opt-in']);
+            
+            // Add data rows
             foreach ($submissions as $submission) {
                 fputcsv($file, [
-                    $submission->submitted_at->format('Y-m-d H:i:s'),
+                    $submission->submitted_at,
                     $submission->seat_qr_id,
                     $submission->name,
-                    $submission->phone,
                     $submission->email,
-                    $submission->date_of_birth->format('Y-m-d'),
+                    $submission->phone,
+                    $submission->date_of_birth,
                     $submission->age,
                     $submission->whatsapp_optin ? 'Yes' : 'No',
-                    $submission->joke,
                 ]);
             }
-
+            
             fclose($file);
         };
 
@@ -153,13 +123,15 @@ class AdminDashboard extends Component
 
     public function resetQRCodes()
     {
-        $count = QRCode::where('reset_at', '<=', now())->count();
-        QRCode::where('reset_at', '<=', now())->update([
-            'is_active' => true,
-            'reset_at' => null,
-        ]);
+        QRCode::where('is_active', false)
+            ->where('reset_at', '<=', now())
+            ->update([
+                'is_active' => true,
+                'last_used_at' => null,
+                'reset_at' => null,
+            ]);
 
-        session()->flash('message', "{$count} QR codes have been reset successfully!");
+        session()->flash('message', 'Expired QR codes have been reset successfully!');
         $this->loadDashboardData();
     }
 
