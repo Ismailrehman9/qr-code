@@ -13,9 +13,13 @@ use App\Http\Controllers\AuthController;
 
 // Public Routes
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        return redirect()->route('admin.dashboard');
+    }
+    return view('auth.login');
 });
 
+// Public Routes
 Route::get('/form', SubmissionForm::class)->name('form');
 
 // Auth Routes

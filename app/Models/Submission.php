@@ -10,14 +10,13 @@ class Submission extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+     protected $fillable = [
         'seat_qr_id',
         'name',
-        'phone',
         'email',
-        'date_of_birth',
+        'phone',
+        'age',
         'whatsapp_optin',
-        'joke',
         'submitted_at',
     ];
 
