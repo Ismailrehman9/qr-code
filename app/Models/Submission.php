@@ -15,6 +15,7 @@ class Submission extends Model
         'name',
         'email',
         'phone',
+        'date_of_birth',  // MAKE SURE THIS IS HERE
         'age',
         'whatsapp_optin',
         'submitted_at',
