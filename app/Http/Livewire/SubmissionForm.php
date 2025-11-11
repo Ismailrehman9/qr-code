@@ -324,6 +324,7 @@ class SubmissionForm extends Component
             return null;
         }
 
+        
         // If path is relative (like storage/app/file.json), convert to absolute
         if (!str_starts_with($path, '/') && !str_starts_with($path, 'C:\\')) {
             $path = base_path($path);
