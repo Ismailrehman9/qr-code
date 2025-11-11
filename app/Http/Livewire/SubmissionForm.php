@@ -315,7 +315,6 @@ class SubmissionForm extends Component
     {
         $path = env('GOOGLE_APPLICATION_CREDENTIALS');
 
-        // Fallback if not using Google SDK naming
         if (!$path) {
             $path = env('GOOGLE_CREDENTIALS_PATH');
         }
