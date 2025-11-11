@@ -42,7 +42,6 @@ class SubmissionForm extends Component
     public function mount()
     {
         $id = request()->query('id');
-        
         if (!$id) {
             abort(404, 'QR code not found. Please scan a valid QR code.');
         }
@@ -70,7 +69,6 @@ class SubmissionForm extends Component
         if ($age >= 45 && $age <= 54) return '45-54';
         if ($age >= 55 && $age <= 64) return '55-64';
         if ($age >= 65) return '65+';
-        
         return 'Under 18';
     }
 
@@ -129,6 +127,19 @@ class SubmissionForm extends Component
                 'submitted_at' => now(),
             ]);
 
+            // NEW: Save SAME DATA to Google Sheets (RIGHT AFTER DATABASE SAVE)
+            $this->saveToGoogleSheet([
+                'seat_qr_id' => $this->seat_qr_id,
+                'name' => $this->name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+                'date_of_birth' => $this->date_of_birth,
+                'age' => $ageBracket,
+                'whatsapp_optin' => $this->whatsapp_optin,
+                'submitted_at' => now()->toDateTimeString()
+            ]);
+
+
             // Mark QR code as used
             QRCode::where('code', $this->seat_qr_id)->update([
                 'is_active' => false,
@@ -141,15 +152,12 @@ class SubmissionForm extends Component
 
             $this->showSuccess = true;
             $this->reset(['name', 'email', 'phone', 'date_of_birth', 'whatsapp_optin']);
-
         } catch (ValidationException $e) {
             // Re-throw validation errors so they show on the form
             throw $e;
-            
         } catch (\Exception $e) {
             \Log::error('Submission Error: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
-            
             // Check if it's a duplicate entry database error
             if (str_contains($e->getMessage(), 'Duplicate entry')) {
                 if (str_contains($e->getMessage(), 'email')) {
@@ -168,5 +176,160 @@ class SubmissionForm extends Component
     public function render()
     {
         return view('livewire.submission-form');
+    }
+
+    // ===================================================================
+    // GOOGLE SHEETS INTEGRATION
+    // ===================================================================
+
+    private function saveToGoogleSheet($data)
+    {
+        $credentialsPath = $this->getCredentialsPath();
+        $spreadsheetId   = env('GOOGLE_SHEET_ID');
+
+        if (!$credentialsPath || !file_exists($credentialsPath)) {
+            \Log::error('Google credentials file not found: ' . $credentialsPath);
+            return false;
+        }
+
+        $credentials = json_decode(file_get_contents($credentialsPath), true);
+        $token       = $this->getGoogleAccessToken($credentials);
+
+        if (!$token) {
+            \Log::error('Failed to obtain Google access token');
+            return false;
+        }
+
+        $values = [[
+            $data['seat_qr_id'],
+            $data['name'],
+            $data['email'],
+            $data['phone'],
+            $data['date_of_birth'],
+            $data['age'],
+            $data['whatsapp_optin'] ? 'Yes' : 'No',
+            $data['submitted_at']
+        ]];
+
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/Sheet1!A:H:append?valueInputOption=RAW";
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $token,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POSTFIELDS     => json_encode(['values' => $values]),
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            \Log::info('Google Sheet row added successfully');
+            return true;
+        }
+
+        \Log::error("Google Sheets API error (HTTP {$httpCode}): " . $response);
+        return false;
+    }
+
+    private function getGoogleAccessToken($credentials)
+    {
+        $url = 'https://oauth2.googleapis.com/token';
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query([
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion'  => $this->createJWT($credentials)
+            ]),
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $result = json_decode($response, true);
+        return $result['access_token'] ?? null;
+    }
+
+    private function createJWT($credentials)
+    {
+        $header = json_encode(['alg' => 'RS256', 'typ' => 'JWT']);
+        $now    = time();
+
+        $claim = json_encode([
+            'iss'   => $credentials['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
+            'aud'   => 'https://oauth2.googleapis.com/token',
+            'exp'   => $now + 3600,
+            'iat'   => $now,
+        ]);
+
+        $headerEncoded = $this->base64UrlEncode($header);
+        $claimEncoded  = $this->base64UrlEncode($claim);
+        $dataToSign    = $headerEncoded . '.' . $claimEncoded;
+
+        // --- FIXED: Use private_key from JSON ---
+        $privateKeyPem = $credentials['private_key'];
+
+        // Some keys are raw base64 – wrap in PEM if needed
+        if (!str_contains($privateKeyPem, '-----BEGIN')) {
+            $privateKeyPem = "-----BEGIN PRIVATE KEY-----\n" .
+                chunk_split($privateKeyPem, 64, "\n") .
+                "-----END PRIVATE KEY-----\n";
+        }
+
+        $pkey = openssl_pkey_get_private($privateKeyPem);
+        if ($pkey === false) {
+            \Log::error('OpenSSL failed to load private key: ' . openssl_error_string());
+            return false;
+        }
+
+        $signature = '';
+        $signed = openssl_sign($dataToSign, $signature, $pkey, OPENSSL_ALGO_SHA256);
+        openssl_pkey_free($pkey);
+
+        if (!$signed) {
+            \Log::error('JWT signing failed: ' . openssl_error_string());
+            return false;
+        }
+
+        $signatureEncoded = $this->base64UrlEncode($signature);
+        return $dataToSign . '.' . $signatureEncoded;
+    }
+
+    private function base64UrlEncode($data)
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    // NEW: Get credentials path from .env
+    private function getCredentialsPath()
+    {
+        $path = env('GOOGLE_APPLICATION_CREDENTIALS');
+
+        // Fallback if not using Google SDK naming
+        if (!$path) {
+            $path = env('GOOGLE_CREDENTIALS_PATH');
+        }
+
+        if (!$path) {
+            \Log::error('No Google credentials path defined in .env');
+            return null;
+        }
+
+        // If path is relative (like storage/app/file.json), convert to absolute
+        if (!str_starts_with($path, '/') && !str_starts_with($path, 'C:\\')) {
+            $path = base_path($path);
+        }
+
+        return $path;
     }
 }
