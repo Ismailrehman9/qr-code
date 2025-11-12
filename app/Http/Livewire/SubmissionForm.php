@@ -184,7 +184,8 @@ class SubmissionForm extends Component
 
     private function saveToGoogleSheet($data)
     {
-        $credentialsPath = $this->getCredentialsPath();
+        // $credentialsPath = $this->getCredentialsPath();
+        $credentialsPath = config('services.google.credentials_path');
         $spreadsheetId   = env('GOOGLE_SHEET_ID');
 
         if (!$credentialsPath || !file_exists($credentialsPath)) {
