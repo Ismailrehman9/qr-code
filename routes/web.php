@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\SubmissionForm;
 use App\Http\Livewire\AdminDashboard;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\QRPrintController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,4 +34,6 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/qr-codes', \App\Http\Livewire\QRManagement::class)->name('admin.qr-codes');
     Route::get('/submissions', \App\Http\Livewire\SubmissionsList::class)->name('admin.submissions');
     Route::get('/download-qr', [\App\Http\Controllers\QRDownloadController::class, 'download'])->name('admin.download-qr');
+    Route::get('/print-qr', [App\Http\Controllers\QRPrintController::class, 'preview'])
+     ->name('admin.print-qr-batch-preview');
 });
