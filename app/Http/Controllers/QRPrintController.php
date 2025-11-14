@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\QRCode;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class QRPrintController extends Controller
 {
-
     public function preview(Request $request)
     {
         $start = $request->query('start');
@@ -22,15 +20,13 @@ class QRPrintController extends Controller
             return redirect()->back()->with('error', 'No QR codes found.');
         }
 
-        // Build full URL
         $baseUrl = config('app.url') . '/form?id=';
         foreach ($qrCodes as $qr) {
             $qr->url = $baseUrl . $qr->code;
         }
 
-
-        // Chunk into 2 per page
-        $pages = $qrCodes->chunk(2);
+        // 1 QR code per page → no chunk
+        $pages = $qrCodes; // each item is one page
 
         return view('print.qr-batch', [
             'pages' => $pages,
