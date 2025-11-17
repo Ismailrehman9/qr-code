@@ -17,12 +17,14 @@ class QRCode extends Model
         'is_active',
         'last_used_at',
         'reset_at',
+        'generated_for_date',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'last_used_at' => 'datetime',
         'reset_at' => 'datetime',
+        'generated_for_date' => 'date',
     ];
 
     public function scopeActive($query)

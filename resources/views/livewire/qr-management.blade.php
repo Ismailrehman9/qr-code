@@ -126,12 +126,17 @@
                                             </svg>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ \Carbon\Carbon::parse($batch->created_at)->format('M d, Y') }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ \Carbon\Carbon::parse($batch->created_at)->format('h:i A') }}
-                                            </div>
+                                        @php
+                                            $generatedDate = $batch->generated_for_date
+                                                ? \Carbon\Carbon::parse($batch->generated_for_date)
+                                                : \Carbon\Carbon::parse($batch->created_at);
+                                        @endphp
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $generatedDate->format('M d, Y') }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ \Carbon\Carbon::parse($batch->created_at)->format('h:i A') }}
+                                        </div>
                                         </div>
                                     </div>
                                 </td>
@@ -232,6 +237,14 @@
                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                placeholder="Enter number (1-1000)">
                         @error('qrCount') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Generation Date</label>
+                        <input type="date"
+                               wire:model="generationDate"
+                               class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        @error('generationDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">

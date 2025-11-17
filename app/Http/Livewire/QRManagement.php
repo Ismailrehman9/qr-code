@@ -18,9 +18,11 @@ class QRManagement extends Component
     public $activeQRCodes;
     public $usedQRCodes;
     public $qrBatches;
+    public $generationDate;
 
     public function mount()
     {
+        $this->generationDate = now()->toDateString();
         $this->loadData();
     }
 
@@ -38,7 +40,8 @@ class QRManagement extends Component
             DB::raw('SUM(CASE WHEN last_used_at IS NOT NULL THEN 1 ELSE 0 END) as used_codes'),
             DB::raw('MIN(seat_number) as first_seat'),
             DB::raw('MAX(seat_number) as last_seat'),
-            DB::raw('MAX(created_at) as created_at')
+            DB::raw('MAX(created_at) as created_at'),
+            DB::raw('MAX(generated_for_date) as generated_for_date')
         )
         ->groupBy('batch_time')
         ->orderBy('created_at', 'desc')
@@ -48,17 +51,20 @@ class QRManagement extends Component
     public function openModal()
     {
         $this->showModal = true;
+        $this->generationDate = now()->toDateString();
     }
 
     public function closeModal()
     {
         $this->showModal = false;
+        $this->generationDate = now()->toDateString();
     }
 
     public function generateQRCodes()
     {
         $this->validate([
-            'qrCount' => 'required|integer|min:1|max:1000'
+            'qrCount' => 'required|integer|min:1|max:1000',
+            'generationDate' => 'required|date',
         ]);
 
         $lastSeat = QRCode::max('seat_number') ?? 0;
@@ -71,12 +77,14 @@ class QRManagement extends Component
                 'code' => $code,
                 'seat_number' => $seatNumber,
                 'is_active' => true,
+                'generated_for_date' => $this->generationDate,
             ]);
         }
 
         session()->flash('success', "{$this->qrCount} QR codes generated successfully!");
         $this->showModal = false;
         $this->qrCount = 100;
+        $this->generationDate = now()->toDateString();
         $this->loadData();
     }
 
