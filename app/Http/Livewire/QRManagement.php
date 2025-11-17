@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\QRCode;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class QRManagement extends Component
 {
@@ -22,7 +23,7 @@ class QRManagement extends Component
 
     public function mount()
     {
-        $this->generationDate = now()->toDateString();
+        $this->generationDate = now()->format('Y-m-d\TH:i');
         $this->loadData();
     }
 
@@ -51,23 +52,24 @@ class QRManagement extends Component
     public function openModal()
     {
         $this->showModal = true;
-        $this->generationDate = now()->toDateString();
+        $this->generationDate = now()->format('Y-m-d\TH:i');
     }
 
     public function closeModal()
     {
         $this->showModal = false;
-        $this->generationDate = now()->toDateString();
+        $this->generationDate = now()->format('Y-m-d\TH:i');
     }
 
     public function generateQRCodes()
     {
         $this->validate([
             'qrCount' => 'required|integer|min:1|max:1000',
-            'generationDate' => 'required|date',
+            'generationDate' => 'required|date_format:Y-m-d\TH:i',
         ]);
 
         $lastSeat = QRCode::max('seat_number') ?? 0;
+        $generationDateTime = Carbon::createFromFormat('Y-m-d\TH:i', $this->generationDate);
 
         for ($i = 1; $i <= $this->qrCount; $i++) {
             $seatNumber = $lastSeat + $i;
@@ -77,14 +79,14 @@ class QRManagement extends Component
                 'code' => $code,
                 'seat_number' => $seatNumber,
                 'is_active' => true,
-                'generated_for_date' => $this->generationDate,
+                'generated_for_date' => $generationDateTime,
             ]);
         }
 
         session()->flash('success', "{$this->qrCount} QR codes generated successfully!");
         $this->showModal = false;
         $this->qrCount = 100;
-        $this->generationDate = now()->toDateString();
+        $this->generationDate = now()->format('Y-m-d\TH:i');
         $this->loadData();
     }
 

@@ -135,7 +135,7 @@
                                             {{ $generatedDate->format('M d, Y') }}
                                         </div>
                                         <div class="text-sm text-gray-500">
-                                            {{ \Carbon\Carbon::parse($batch->created_at)->format('h:i A') }}
+                                            {{ $generatedDate->format('h:i A') }}
                                         </div>
                                         </div>
                                     </div>
@@ -240,8 +240,8 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Generation Date</label>
-                        <input type="date"
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Generation Date & Time</label>
+                        <input type="datetime-local"
                                wire:model="generationDate"
                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         @error('generationDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

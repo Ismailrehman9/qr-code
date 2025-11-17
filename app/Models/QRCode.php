@@ -24,7 +24,7 @@ class QRCode extends Model
         'is_active' => 'boolean',
         'last_used_at' => 'datetime',
         'reset_at' => 'datetime',
-        'generated_for_date' => 'date',
+        'generated_for_date' => 'datetime',
     ];
 
     public function scopeActive($query)
