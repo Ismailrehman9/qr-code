@@ -5,8 +5,8 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Submission;
 use App\Models\QRCode;
+use App\Services\GeminiJokeService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class SubmissionForm extends Component
@@ -20,6 +20,7 @@ class SubmissionForm extends Component
     public $whatsapp_optin = false;
     public $showSuccess = false;
     public $joke = '';
+    protected GeminiJokeService $geminiJokeService;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -38,6 +39,11 @@ class SubmissionForm extends Component
         'date_of_birth.required' => 'Please select your date of birth',
         'date_of_birth.before' => 'Date of birth must be in the past',
     ];
+
+    public function boot(GeminiJokeService $geminiJokeService)
+    {
+        $this->geminiJokeService = $geminiJokeService;
+    }
 
     public function mount()
     {
@@ -72,22 +78,12 @@ class SubmissionForm extends Component
         return 'Under 18';
     }
 
-    private function fetchJoke()
+    private function fetchJoke(int $age)
     {
-        try {
-            $response = Http::timeout(3)->get('https://v2.jokeapi.dev/joke/Any', [
-                'safe-mode' => true,
-                'type' => 'single'
-            ]);
+        $joke = $this->geminiJokeService->generateForAge($age);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['joke'])) {
-                    return $data['joke'];
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::error('Joke API Error: ' . $e->getMessage());
+        if ($joke) {
+            return $joke;
         }
 
         $fallbackJokes = [
@@ -112,8 +108,9 @@ class SubmissionForm extends Component
             // Validate - this will throw ValidationException if fails
             $this->validate();
 
-            // Calculate age bracket from date of birth
+            // Calculate age bracket and actual age
             $ageBracket = $this->calculateAgeBracket($this->date_of_birth);
+            $age = Carbon::parse($this->date_of_birth)->age;
 
             // Save to database
             $submission = Submission::create([
@@ -148,7 +145,7 @@ class SubmissionForm extends Component
             ]);
 
             // Fetch a joke for the success screen
-            $this->joke = $this->fetchJoke();
+            $this->joke = $this->fetchJoke($age);
 
             $this->showSuccess = true;
             $this->reset(['name', 'email', 'phone', 'date_of_birth', 'whatsapp_optin']);

@@ -30,4 +30,10 @@ return [
         'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash-lite'),
+        'fallback_models' => array_filter(array_map('trim', explode(',', env('GEMINI_FALLBACK_MODELS', 'gemini-2.0-flash,gemini-2.5-flash')))),
+    ],
+
 ];
