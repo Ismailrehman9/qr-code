@@ -6,7 +6,16 @@
             <p class="mt-2 text-gray-600">Real-time giveaway analytics and management</p>
         </div>
         <div class="flex items-center gap-4 ">
-            <span class="text-sm text-gray-600">Welcome, {{ auth()->user()->name }}</span>
+            <div class="flex flex-col items-end">
+                <span class="text-sm text-gray-600">Welcome, {{ auth()->user()->name }}</span>
+                <a href="{{ route('admin.password.edit') }}"
+                   class="mt-1 inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.105.895-2 2-2s2 .895 2 2v1h1a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4a2 2 0 012-2h1v-1c0-1.105.895-2 2-2h0zM12 11V7a4 4 0 018 0v4" />
+                    </svg>
+                    Update Password
+                </a>
+            </div>
             <form method="POST" action="{{ route('logout') }}">
     @csrf
     <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition shadow-md">

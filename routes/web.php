@@ -36,4 +36,6 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/download-qr', [\App\Http\Controllers\QRDownloadController::class, 'download'])->name('admin.download-qr');
     Route::get('/print-qr', [App\Http\Controllers\QRPrintController::class, 'preview'])
      ->name('admin.print-qr-batch-preview');
+    Route::get('/password', [\App\Http\Controllers\AdminPasswordController::class, 'edit'])->name('admin.password.edit');
+    Route::post('/password', [\App\Http\Controllers\AdminPasswordController::class, 'update'])->name('admin.password.update');
 });
