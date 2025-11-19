@@ -167,7 +167,6 @@
                 <div class="qr-item">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&data={{ urlencode($qr->url) }}" 
                          alt="QR {{ $qr->seat_number }}">
-                    <p>#{{ $qr->seat_number }} – {{ $qr->code }}</p>
                 </div>
             </div>
 
