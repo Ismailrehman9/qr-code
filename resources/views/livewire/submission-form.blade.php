@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         @if($showSuccess)
-            <!-- Success State with Joke - ONLY THIS SHOWS -->
+            <!-- Success State with Numerology Reading -->
             <div class="bg-white rounded-2xl shadow-2xl p-8 text-center">
                 <div class="mb-6">
                     <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -9,15 +9,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Thank You! 🎉</h2>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Thank You! ✨</h2>
                     <p class="text-gray-600 mb-6">You're all set for the giveaway!</p>
                 </div>
 
-                <!-- Joke Section -->
-                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 mb-6 border-2 border-yellow-200">
-                    <div class="text-4xl mb-3">😄</div>
+                <!-- Numerology Reading Section -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 mb-6 border-2 border-purple-200">
+                    <div class="text-4xl mb-3">🔮</div>
                     <p class="text-lg text-gray-800 font-medium italic leading-relaxed">
-                        {{ $joke ?: "Why don't scientists trust atoms? Because they make up everything! 😄" }}
+                        {{ $numerologyReading ?: "Your age suggests a year of new beginnings and opportunities. Embrace the change!" }}
                     </p>
                 </div>
 

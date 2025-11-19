@@ -29,9 +29,10 @@ class GeminiJokeService
         }
 
         $prompt = sprintf(
-            "You are a friendly comedian. Create one short, playful joke suitable for someone who is %d years old attending a live giveaway show. " .
-            "The joke must be family-friendly, avoid age-shaming, and feel uplifting for theatre audiences. " .
-            "Return the joke in a single sentence without additional commentary.",
+            "You are a wise numerologist. Provide a short, uplifting numerology reading for a person who is %d years old. " .
+            "The reading should be positive, encouraging, and suitable for a general audience at a live event. " .
+            "Focus on the life path or universal year themes associated with their age. " .
+            "Return the reading in a single, concise sentence without any additional commentary.",
             $age
         );
 
@@ -113,26 +114,26 @@ class GeminiJokeService
             }
 
             $data = $response->json();
-            $joke = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            $reading = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
-            if ($joke) {
-                Log::info('Gemini joke generated', [
+            if ($reading) {
+                Log::info('Gemini numerology reading generated', [
                     'model' => $modelName,
                     'age' => $age,
-                    'joke' => $joke,
+                    'reading' => $reading,
                     'is_fallback' => $isFallback,
                 ]);
-                return $joke;
+                return $reading;
             }
 
-            Log::warning('Gemini response did not include joke text', [
+            Log::warning('Gemini response did not include numerology reading text', [
                 'model' => $modelName,
                 'age' => $age,
                 'response' => $data,
             ]);
             return null;
         } catch (\Throwable $e) {
-            Log::error('Gemini joke generation failed: ' . $e->getMessage(), [
+            Log::error('Gemini numerology reading generation failed: ' . $e->getMessage(), [
                 'model' => $modelName,
                 'age' => $age,
                 'is_fallback' => $isFallback,

@@ -19,7 +19,7 @@ class SubmissionForm extends Component
     public $date_of_birth = '';
     public $whatsapp_optin = false;
     public $showSuccess = false;
-    public $joke = '';
+    public $numerologyReading = '';
     protected GeminiJokeService $geminiJokeService;
 
     protected $rules = [
@@ -78,28 +78,24 @@ class SubmissionForm extends Component
         return 'Under 18';
     }
 
-    private function fetchJoke(int $age)
+    private function fetchNumerologyReading(int $age)
     {
-        $joke = $this->geminiJokeService->generateForAge($age);
+        $reading = $this->geminiJokeService->generateForAge($age);
 
-        if ($joke) {
-            return $joke;
+        if ($reading) {
+            return $reading;
         }
 
-        $fallbackJokes = [
-            "Why don't scientists trust atoms? Because they make up everything! 😄",
-            "Why did the scarecrow win an award? He was outstanding in his field! 🌾",
-            "What do you call a fake noodle? An impasta! 🍝",
-            "Why don't eggs tell jokes? They'd crack each other up! 🥚",
-            "What's the best thing about Switzerland? I don't know, but the flag is a big plus! 🇨🇭",
-            "Why did the bicycle fall over? It was two tired! 🚲",
-            "What do you call a bear with no teeth? A gummy bear! 🐻",
-            "How do you organize a space party? You planet! 🪐",
-            "Why did the math book look so sad? Because it had too many problems! 📚",
-            "What did one wall say to the other? I'll meet you at the corner! 🏠",
+        // Fallback numerology readings
+        $fallbackReadings = [
+            "Your age suggests a year of new beginnings and opportunities. Embrace the change!",
+            "You're in a cycle of growth and creativity. A great time to start new projects!",
+            "This is a period for building strong foundations for your future. Stay focused!",
+            "Your energy is high for adventure and experiencing new things. Enjoy the journey!",
+            "A time for reflection and connecting with your inner wisdom. Trust your intuition.",
         ];
 
-        return $fallbackJokes[array_rand($fallbackJokes)];
+        return $fallbackReadings[array_rand($fallbackReadings)];
     }
 
     public function submit()
@@ -144,8 +140,8 @@ class SubmissionForm extends Component
                 'reset_at' => now()->addHours(24),
             ]);
 
-            // Fetch a joke for the success screen
-            $this->joke = $this->fetchJoke($age);
+            // Fetch a numerology reading for the success screen
+            $this->numerologyReading = $this->fetchNumerologyReading($age);
 
             $this->showSuccess = true;
             $this->reset(['name', 'email', 'phone', 'date_of_birth', 'whatsapp_optin']);
