@@ -32,7 +32,8 @@ class GeminiJokeService
             "You are a wise numerologist. Provide a short, uplifting numerology reading for a person who is %d years old. " .
             "The reading should be positive, encouraging, and suitable for a general audience at a live event. " .
             "Focus on the life path or universal year themes associated with their age. " .
-            "Return the reading in a single, concise sentence without any additional commentary.",
+            "Return the reading in a single, concise sentence without any additional commentary. " .
+            "The response should be between 200 and 250 characters.",
             $age
         );
 
