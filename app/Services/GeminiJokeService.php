@@ -32,8 +32,8 @@ class GeminiJokeService
             "You are a wise numerologist. Provide a short, uplifting numerology reading for a person who is %d years old. " .
             "The reading should be positive, encouraging, and suitable for a general audience at a live event. " .
             "Focus on the life path or universal year themes associated with their age. " .
-            "Return the reading in a single, concise sentence without any additional commentary. " .
-            "The response should be between 200 and 250 characters.",
+            "Return the reading in at least two paragraphs, separated by a '\\n' character. " .
+            "The response should be between 200 and 250 words.",
             $age
         );
 
@@ -42,7 +42,12 @@ class GeminiJokeService
         foreach ($modelsToTry as $index => $modelName) {
             $result = $this->requestGemini($prompt, $modelName, $age, $index > 0);
             if ($result !== null) {
-                return $result;
+                $paragraphs = explode("\n", $result);
+                $formattedReading = "";
+                foreach ($paragraphs as $paragraph) {
+                    $formattedReading .= "<p>" . trim($paragraph) . "</p>";
+                }
+                return $formattedReading;
             }
         }
 
@@ -63,7 +68,7 @@ class GeminiJokeService
         );
 
         try {
-            $response = Http::timeout(10)->post($url, [
+            $response = Http::timeout(20)->post($url, [
                 'contents' => [
                     [
                         'role' => 'user',
@@ -74,7 +79,7 @@ class GeminiJokeService
                 ],
                 'generationConfig' => [
                     'temperature' => 0.85,
-                    'maxOutputTokens' => 120,
+                    'maxOutputTokens' => 400,
                 ],
                 'safetySettings' => [
                     [
@@ -144,4 +149,3 @@ class GeminiJokeService
         }
     }
 }
-
