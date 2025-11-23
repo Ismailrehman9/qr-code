@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" wire:poll.5s="loadData">
     <!-- Header -->
     <div class="mb-8 flex justify-between items-center">
         <div>
@@ -109,6 +109,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated On</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat Range</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Generated</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QR Images</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Used</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unused</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage Rate</th>
@@ -150,6 +151,20 @@
                                     <div class="text-sm text-gray-500">codes</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    @php
+                                        $qrProgress = $batch->total_codes > 0 ? ($batch->generated_codes / $batch->total_codes) * 100 : 0;
+                                    @endphp
+                                    <div class="flex items-center">
+                                        <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="h-2 rounded-full {{ $qrProgress == 100 ? 'bg-green-600' : 'bg-yellow-500' }}" style="width: {{ $qrProgress }}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm font-bold {{ $qrProgress == 100 ? 'text-green-600' : 'text-yellow-600' }}">
+                                        {{ number_format($batch->generated_codes) }}/{{ number_format($batch->total_codes) }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">{{ number_format($qrProgress, 0) }}% complete</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-bold text-green-600">{{ number_format($batch->used_codes) }}</div>
                                     <div class="text-sm text-gray-500">used</div>
                                 </td>
@@ -170,9 +185,17 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2">
-                                           <a href="{{ route('admin.download-qr', ['start' => $batch->first_seat, 'end' => $batch->last_seat]) }}"
-                                        class="text-green-600 hover:text-green-900 transition"
-                                        title="Download">
+                                        <button wire:click="regenerateQRCodes({{ $batch->first_seat }}, {{ $batch->last_seat }})"
+                                                class="text-purple-600 hover:text-purple-900 transition"
+                                                title="Regenerate QR Images">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+
+                                        <a href="{{ route('admin.download-qr', ['start' => $batch->first_seat, 'end' => $batch->last_seat]) }}"
+                                            class="text-green-600 hover:text-green-900 transition {{ $qrProgress < 100 ? 'opacity-50 pointer-events-none' : '' }}"
+                                            title="{{ $qrProgress < 100 ? 'QR codes still generating...' : 'Download' }}">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                             </svg>

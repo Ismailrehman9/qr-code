@@ -18,6 +18,8 @@ class QRCode extends Model
         'last_used_at',
         'reset_at',
         'generated_for_date',
+        'qr_image_path',
+        'qr_generated',
     ];
 
     protected $casts = [
@@ -25,6 +27,7 @@ class QRCode extends Model
         'last_used_at' => 'datetime',
         'reset_at' => 'datetime',
         'generated_for_date' => 'datetime',
+        'qr_generated' => 'boolean',
     ];
 
     public function scopeActive($query)

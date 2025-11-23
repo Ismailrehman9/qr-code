@@ -78,21 +78,22 @@ class SubmissionForm extends Component
         return 'Under 18';
     }
 
-    private function fetchNumerologyReading(int $age)
+    private function fetchNumerologyReading(int $age, ?string $name = null)
     {
-        $reading = $this->geminiJokeService->generateForAge($age);
+        $reading = $this->geminiJokeService->generateForAge($age, $name);
 
         if ($reading) {
             return $reading;
         }
 
         // Fallback numerology readings
+        $nameGreeting = $name ? $name . ', ' : '';
         $fallbackReadings = [
-            "Your age suggests a year of new beginnings and opportunities. Embrace the change!",
-            "You're in a cycle of growth and creativity. A great time to start new projects!",
-            "This is a period for building strong foundations for your future. Stay focused!",
-            "Your energy is high for adventure and experiencing new things. Enjoy the journey!",
-            "A time for reflection and connecting with your inner wisdom. Trust your intuition.",
+            "{$nameGreeting}Your age suggests a year of new beginnings and opportunities. Embrace the change!",
+            "{$nameGreeting}You're in a cycle of growth and creativity. A great time to start new projects!",
+            "{$nameGreeting}This is a period for building strong foundations for your future. Stay focused!",
+            "{$nameGreeting}Your energy is high for adventure and experiencing new things. Enjoy the journey!",
+            "{$nameGreeting}A time for reflection and connecting with your inner wisdom. Trust your intuition.",
         ];
 
         return $fallbackReadings[array_rand($fallbackReadings)];
@@ -140,8 +141,9 @@ class SubmissionForm extends Component
                 'reset_at' => now()->addHours(24),
             ]);
 
-            // Fetch a numerology reading for the success screen
-            $this->numerologyReading = $this->fetchNumerologyReading($age);
+            // Fetch a numerology reading for the success screen (with personalized name)
+            $firstName = explode(' ', trim($this->name))[0]; // Get first name only
+            $this->numerologyReading = $this->fetchNumerologyReading($age, $firstName);
 
             $this->showSuccess = true;
             $this->reset(['name', 'email', 'phone', 'date_of_birth', 'whatsapp_optin']);

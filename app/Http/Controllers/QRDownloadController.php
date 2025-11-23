@@ -14,25 +14,12 @@ class QRDownloadController extends Controller
         $end = $request->get('end');
 
         $qrCodes = QRCode::whereBetween('seat_number', [$start, $end])
+            ->where('qr_generated', true)
             ->orderBy('seat_number')
             ->get();
 
         if ($qrCodes->isEmpty()) {
-            return back()->with('error', 'No QR codes found in this range.');
-        }
-
-        // Create temporary directory
-        $tempDir = storage_path('app/temp_qr_' . time());
-        mkdir($tempDir, 0755, true);
-
-        // Generate QR code images
-        foreach ($qrCodes as $qrCode) {
-            $url = config('app.url') . '/form?id=' . $qrCode->code;
-            $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' . urlencode($url);
-            
-            $imageContent = file_get_contents($qrImageUrl);
-            $filename = "QR_Seat_{$qrCode->seat_number}_{$qrCode->code}.png";
-            file_put_contents($tempDir . '/' . $filename, $imageContent);
+            return back()->with('error', 'No QR codes found or QR codes are still being generated. Please wait and try again.');
         }
 
         // Create ZIP file
@@ -41,16 +28,14 @@ class QRDownloadController extends Controller
 
         $zip = new ZipArchive();
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            $files = glob($tempDir . '/*.png');
-            foreach ($files as $file) {
-                $zip->addFile($file, basename($file));
+            foreach ($qrCodes as $qrCode) {
+                if ($qrCode->qr_image_path && \Storage::exists($qrCode->qr_image_path)) {
+                    $filePath = storage_path('app/' . $qrCode->qr_image_path);
+                    $zip->addFile($filePath, basename($qrCode->qr_image_path));
+                }
             }
             $zip->close();
         }
-
-        // Clean up temp directory
-        array_map('unlink', glob($tempDir . '/*.png'));
-        rmdir($tempDir);
 
         // Download the ZIP file
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
