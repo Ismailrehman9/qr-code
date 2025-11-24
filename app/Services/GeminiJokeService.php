@@ -35,11 +35,12 @@ class GeminiJokeService
             "%s" .
             "The reading should be positive, encouraging, and suitable for a general audience at a live event. " .
             "Focus on the life path or universal year themes associated with their age. " .
+            "Do NOT mention the user's age as a number (e.g. 'at 0 years old' or 'at age 0'). Instead, focus on the numerological significance of their birth date energy. " .
             "Return the reading in at least two paragraphs, separated by a '\\n' character. " .
             "The response should be between 200 and 250 words.",
             $nameAddress,
             $age,
-            $name ? "Address them by their first name in the reading to make it more personal. " : ""
+            $name ? "Address them by their first name ({$name}) in the reading to make it more personal. " : ""
         );
 
         $modelsToTry = array_values(array_unique(array_merge([$this->model], $this->fallbackModels)));
@@ -47,10 +48,15 @@ class GeminiJokeService
         foreach ($modelsToTry as $index => $modelName) {
             $result = $this->requestGemini($prompt, $modelName, $age, $index > 0, $name);
             if ($result !== null) {
+                // Handle literal \n characters if the model returns them as text
+                $result = str_replace(['\n', '\\n'], "\n", $result);
+
                 $paragraphs = explode("\n", $result);
                 $formattedReading = "";
                 foreach ($paragraphs as $paragraph) {
-                    $formattedReading .= "<p>" . trim($paragraph) . "</p>";
+                    if (trim($paragraph) !== '') {
+                        $formattedReading .= "<p>" . trim($paragraph) . "</p>";
+                    }
                 }
                 return $formattedReading;
             }

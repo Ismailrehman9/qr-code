@@ -24,8 +24,8 @@ class SubmissionForm extends Component
 
     protected $rules = [
         'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:submissions,email',
-        'phone' => 'required|string|max:20|unique:submissions,phone',
+        'email' => 'required|email|max:255',
+        'phone' => 'required|string|max:20',
         'date_of_birth' => 'required|date|before:today',
     ];
 
@@ -33,9 +33,7 @@ class SubmissionForm extends Component
         'name.required' => 'Please enter your name',
         'email.required' => 'Please enter your email',
         'email.email' => 'Please enter a valid email',
-        'email.unique' => 'This email has already been registered. Each person can only participate once.',
         'phone.required' => 'Please enter your phone number',
-        'phone.unique' => 'This phone number has already been registered. Each person can only participate once.',
         'date_of_birth.required' => 'Please select your date of birth',
         'date_of_birth.before' => 'Date of birth must be in the past',
     ];
@@ -69,12 +67,18 @@ class SubmissionForm extends Component
     {
         $age = Carbon::parse($dateOfBirth)->age;
 
-        if ($age >= 18 && $age <= 24) return '18-24';
-        if ($age >= 25 && $age <= 34) return '25-34';
-        if ($age >= 35 && $age <= 44) return '35-44';
-        if ($age >= 45 && $age <= 54) return '45-54';
-        if ($age >= 55 && $age <= 64) return '55-64';
-        if ($age >= 65) return '65+';
+        if ($age >= 18 && $age <= 24)
+            return '18-24';
+        if ($age >= 25 && $age <= 34)
+            return '25-34';
+        if ($age >= 35 && $age <= 44)
+            return '35-44';
+        if ($age >= 45 && $age <= 54)
+            return '45-54';
+        if ($age >= 55 && $age <= 64)
+            return '55-64';
+        if ($age >= 65)
+            return '65+';
         return 'Under 18';
     }
 
@@ -104,6 +108,24 @@ class SubmissionForm extends Component
         try {
             // Validate - this will throw ValidationException if fails
             $this->validate();
+
+            // Custom Validation: Check for recent submissions (within 24 hours)
+            $recentSubmission = Submission::where(function ($query) {
+                $query->where('email', $this->email)
+                    ->orWhere('phone', $this->phone);
+            })
+                ->where('submitted_at', '>=', now()->subHours(24))
+                ->first();
+
+            if ($recentSubmission) {
+                if ($recentSubmission->email === $this->email) {
+                    $this->addError('email', 'This email has already been used for a submission in the last 24 hours.');
+                }
+                if ($recentSubmission->phone === $this->phone) {
+                    $this->addError('phone', 'This phone number has already been used for a submission in the last 24 hours.');
+                }
+                return;
+            }
 
             // Calculate age bracket and actual age
             $ageBracket = $this->calculateAgeBracket($this->date_of_birth);
@@ -153,18 +175,7 @@ class SubmissionForm extends Component
         } catch (\Exception $e) {
             \Log::error('Submission Error: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
-            // Check if it's a duplicate entry database error
-            if (str_contains($e->getMessage(), 'Duplicate entry')) {
-                if (str_contains($e->getMessage(), 'email')) {
-                    $this->addError('email', 'This email has already been registered. Each person can only participate once.');
-                } elseif (str_contains($e->getMessage(), 'phone')) {
-                    $this->addError('phone', 'This phone number has already been registered. Each person can only participate once.');
-                } else {
-                    session()->flash('error', 'This information has already been registered. Each person can only participate once.');
-                }
-            } else {
-                session()->flash('error', 'An error occurred while submitting. Please try again or contact support.');
-            }
+            session()->flash('error', 'An error occurred while submitting. Please try again or contact support.');
         }
     }
 
@@ -181,7 +192,7 @@ class SubmissionForm extends Component
     {
         // $credentialsPath = $this->getCredentialsPath();
         $credentialsPath = config('services.google.credentials_path');
-        $spreadsheetId   = env('GOOGLE_SHEET_ID');
+        $spreadsheetId = env('GOOGLE_SHEET_ID');
 
         if (!$credentialsPath || !file_exists($credentialsPath)) {
             \Log::error('Google credentials file not found: ' . $credentialsPath);
@@ -189,35 +200,37 @@ class SubmissionForm extends Component
         }
 
         $credentials = json_decode(file_get_contents($credentialsPath), true);
-        $token       = $this->getGoogleAccessToken($credentials);
+        $token = $this->getGoogleAccessToken($credentials);
 
         if (!$token) {
             \Log::error('Failed to obtain Google access token');
             return false;
         }
 
-        $values = [[
-            $data['seat_qr_id'],
-            $data['name'],
-            $data['email'],
-            $data['phone'],
-            $data['date_of_birth'],
-            $data['age'],
-            $data['whatsapp_optin'] ? 'Yes' : 'No',
-            $data['submitted_at']
-        ]];
+        $values = [
+            [
+                $data['seat_qr_id'],
+                $data['name'],
+                $data['email'],
+                $data['phone'],
+                $data['date_of_birth'],
+                $data['age'],
+                $data['whatsapp_optin'] ? 'Yes' : 'No',
+                $data['submitted_at']
+            ]
+        ];
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/Sheet1!A:H:append?valueInputOption=RAW";
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
-            CURLOPT_POST           => true,
+            CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER     => [
+            CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $token,
                 'Content-Type: application/json',
             ],
-            CURLOPT_POSTFIELDS     => json_encode(['values' => $values]),
+            CURLOPT_POSTFIELDS => json_encode(['values' => $values]),
         ]);
 
         $response = curl_exec($ch);
@@ -239,11 +252,11 @@ class SubmissionForm extends Component
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL            => $url,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => http_build_query([
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query([
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion'  => $this->createJWT($credentials)
+                'assertion' => $this->createJWT($credentials)
             ]),
             CURLOPT_RETURNTRANSFER => true,
         ]);
@@ -258,19 +271,19 @@ class SubmissionForm extends Component
     private function createJWT($credentials)
     {
         $header = json_encode(['alg' => 'RS256', 'typ' => 'JWT']);
-        $now    = time();
+        $now = time();
 
         $claim = json_encode([
-            'iss'   => $credentials['client_email'],
+            'iss' => $credentials['client_email'],
             'scope' => 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
-            'aud'   => 'https://oauth2.googleapis.com/token',
-            'exp'   => $now + 3600,
-            'iat'   => $now,
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'exp' => $now + 3600,
+            'iat' => $now,
         ]);
 
         $headerEncoded = $this->base64UrlEncode($header);
-        $claimEncoded  = $this->base64UrlEncode($claim);
-        $dataToSign    = $headerEncoded . '.' . $claimEncoded;
+        $claimEncoded = $this->base64UrlEncode($claim);
+        $dataToSign = $headerEncoded . '.' . $claimEncoded;
 
         // --- FIXED: Use private_key from JSON ---
         $privateKeyPem = $credentials['private_key'];
@@ -320,7 +333,7 @@ class SubmissionForm extends Component
             return null;
         }
 
-        
+
         // If path is relative (like storage/app/file.json), convert to absolute
         if (!str_starts_with($path, '/') && !str_starts_with($path, 'C:\\')) {
             $path = base_path($path);

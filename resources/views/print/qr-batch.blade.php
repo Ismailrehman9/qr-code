@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print QR - {{ $batchRange }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;600&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;600&family=Inter:wght@500;600&display=swap"
+        rel="stylesheet">
     <style>
         @page {
             size: A4 portrait;
             margin: 0;
         }
 
-        * { 
-            box-sizing: border-box; 
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
@@ -61,7 +63,8 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding:  0; /* Removed side padding */
+            padding: 0;
+            /* Removed side padding */
         }
 
         /* QR Item - Fixed Width, Auto Margin */
@@ -69,7 +72,8 @@
             text-align: center;
             width: 100%;
             max-width: 500px;
-            margin: 0 auto; /* Forces perfect center */
+            margin: 0 auto;
+            /* Forces perfect center */
         }
 
         .qr-item img {
@@ -84,7 +88,8 @@
             background: white;
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
             display: block;
-            margin: 0 auto; /* Double center */
+            margin: 0 auto;
+            /* Double center */
         }
 
         .qr-item p {
@@ -110,12 +115,17 @@
 
         /* Print Settings */
         @media print {
-            .no-print { display: none !important; }
-            body, .page { 
-                background: white !important; 
+            .no-print {
+                display: none !important;
+            }
+
+            body,
+            .page {
+                background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
+
             .page {
                 padding: 1.8cm 1.5cm 1.5cm !important;
             }
@@ -145,28 +155,33 @@
             color: white;
         }
 
-        .btn-print:hover { background: #4338ca; }
+        .btn-print:hover {
+            background: #4338ca;
+        }
 
         .btn-close {
             background: #6b7280;
             color: white;
         }
 
-        .btn-close:hover { background: #4b5563; }
+        .btn-close:hover {
+            background: #4b5563;
+        }
     </style>
 </head>
+
 <body onload="window.print()">
 
     @foreach($pages as $index => $qr)
         <div class="page">
             <!-- Heading -->
-            <div class="heading">Scan Now</div>
+            <div class="heading">SCAN BELOW WITH YOUR PHONE TO GET A FREE NUMEROLOGY READING!</div>
 
             <!-- QR Code - DEAD CENTER -->
             <div class="qr-container">
                 <div class="qr-item">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&data={{ urlencode($qr->url) }}" 
-                         alt="QR {{ $qr->seat_number }}">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&data={{ urlencode($qr->url) }}"
+                        alt="QR {{ $qr->seat_number }}">
                 </div>
             </div>
 
@@ -184,4 +199,5 @@
     </div>
 
 </body>
+
 </html>
