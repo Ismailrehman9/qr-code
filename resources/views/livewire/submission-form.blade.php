@@ -86,22 +86,44 @@
                     </div>
 
                     <div>
-                        <label for="date_of_birth" class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth
-                            *</label>
-                        <input type="date" id="date_of_birth" wire:model="date_of_birth" max="{{ date('Y-m-d') }}"
-                            class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition">
-                        @error('date_of_birth')
-                            <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p class="text-sm text-red-700 flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                    {{ $message }}
-                                </p>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth *</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <!-- Day -->
+                            <div>
+                                <select wire:model="dob_day"
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition">
+                                    <option value="">Day</option>
+                                    @for ($i = 1; $i <= 31; $i++)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
+                                </select>
+                                @error('dob_day') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                             </div>
-                        @enderror
+
+                            <!-- Month -->
+                            <div>
+                                <select wire:model="dob_month"
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition">
+                                    <option value="">Month</option>
+                                    @foreach(range(1, 12) as $m)
+                                        <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('dob_month') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Year -->
+                            <div>
+                                <select wire:model="dob_year"
+                                    class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition">
+                                    <option value="">Year</option>
+                                    @for ($i = date('Y'); $i >= 1920; $i--)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
+                                </select>
+                                @error('dob_year') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-start">
@@ -110,7 +132,7 @@
                                 class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </div>
                         <label for="whatsapp_optin" class="ml-3 text-sm text-gray-700">
-                            I'd like to receive updates and exclusive offers via WhatsApp
+                            Sign up to FREE CASH DRAW and to get whats app messages
                         </label>
                     </div>
 

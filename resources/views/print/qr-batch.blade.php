@@ -46,7 +46,7 @@
         /* Heading - Perfect Center */
         .heading {
             font-family: 'Poppins', sans-serif;
-            font-size: 42px;
+            font-size: 32px;
             font-weight: 700;
             color: #111827;
             text-align: center;
@@ -99,6 +99,19 @@
             color: #1f2937;
             text-align: center;
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Bottom Text - Instructions below QR code */
+        .bottom-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            text-align: center;
+            margin-top: 1cm;
+            margin-bottom: 2cm;
+            width: 90%;
+            line-height: 1.5;
         }
 
         /* Page Number - Dead Center */
@@ -175,7 +188,9 @@
     @foreach($pages as $index => $qr)
         <div class="page">
             <!-- Heading -->
-            <div class="heading">SCAN BELOW WITH YOUR PHONE TO GET A FREE NUMEROLOGY READING!</div>
+            <div class="heading">SCAN BELOW WITH YOUR PHONE TO GET A FREE NUMEROLOGY READING!
+                EVERYONE WHO ENTERS WILL BE PLACED INTO THE MONTHLY DRAW TO
+                WIN A ZOOM READING WITH MICHAEL HIMSELF!!</div>
 
             <!-- QR Code - DEAD CENTER -->
             <div class="qr-container">
@@ -183,6 +198,12 @@
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&data={{ urlencode($qr->url) }}"
                         alt="QR {{ $qr->seat_number }}">
                 </div>
+            </div>
+
+            <!-- Bottom Text - Instructions -->
+            <div class="bottom-text">
+                NOT SURE HOW TO SCAN THE QR CODE? Bring down your sheet and one of 
+                the team at the front of the stage will scan the QR code for you.
             </div>
 
             <!-- Page Number -->

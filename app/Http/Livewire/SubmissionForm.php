@@ -17,6 +17,9 @@ class SubmissionForm extends Component
     public $email = '';
     public $phone = '';
     public $date_of_birth = '';
+    public $dob_day = '';
+    public $dob_month = '';
+    public $dob_year = '';
     public $whatsapp_optin = false;
     public $showSuccess = false;
     public $numerologyReading = '';
@@ -26,7 +29,9 @@ class SubmissionForm extends Component
         'name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
         'phone' => 'required|string|max:20',
-        'date_of_birth' => 'required|date|before:today',
+        'dob_day' => 'required',
+        'dob_month' => 'required',
+        'dob_year' => 'required',
     ];
 
     protected $messages = [
@@ -34,8 +39,9 @@ class SubmissionForm extends Component
         'email.required' => 'Please enter your email',
         'email.email' => 'Please enter a valid email',
         'phone.required' => 'Please enter your phone number',
-        'date_of_birth.required' => 'Please select your date of birth',
-        'date_of_birth.before' => 'Date of birth must be in the past',
+        'dob_day.required' => 'Please select day',
+        'dob_month.required' => 'Please select month',
+        'dob_year.required' => 'Please select year',
     ];
 
     public function boot(GeminiJokeService $geminiJokeService)
@@ -108,6 +114,19 @@ class SubmissionForm extends Component
         try {
             // Validate - this will throw ValidationException if fails
             $this->validate();
+
+            // Construct Date of Birth
+            if (!checkdate($this->dob_month, $this->dob_day, $this->dob_year)) {
+                $this->addError('dob_day', 'Invalid date selected.');
+                return;
+            }
+
+            $this->date_of_birth = Carbon::createFromDate($this->dob_year, $this->dob_month, $this->dob_day)->format('Y-m-d');
+
+            if (Carbon::parse($this->date_of_birth)->isFuture()) {
+                $this->addError('dob_year', 'Date of birth must be in the past.');
+                return;
+            }
 
             // Custom Validation: Check for recent submissions (within 24 hours)
             $recentSubmission = Submission::where(function ($query) {
