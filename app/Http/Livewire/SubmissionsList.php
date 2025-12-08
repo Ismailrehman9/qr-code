@@ -23,6 +23,11 @@ class SubmissionsList extends Component
         $this->resetPage();
     }
 
+    public function performSearch()
+    {
+        $this->resetPage();
+    }
+
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -36,18 +41,18 @@ class SubmissionsList extends Component
     public function render()
     {
         $submissions = Submission::query()
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%')
-                      ->orWhere('phone', 'like', '%' . $this->search . '%')
-                      ->orWhere('seat_qr_id', 'like', '%' . $this->search . '%');
+                        ->orWhere('email', 'like', '%' . $this->search . '%')
+                        ->orWhere('phone', 'like', '%' . $this->search . '%')
+                        ->orWhere('seat_qr_id', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->filterAge, function($query) {
+            ->when($this->filterAge, function ($query) {
                 $query->where('age', $this->filterAge);
             })
-            ->when($this->filterWhatsapp !== '', function($query) {
+            ->when($this->filterWhatsapp !== '', function ($query) {
                 $query->where('whatsapp_optin', $this->filterWhatsapp);
             })
             ->orderBy($this->sortField, $this->sortDirection)
