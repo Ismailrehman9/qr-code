@@ -128,20 +128,24 @@ class SubmissionForm extends Component
                 return;
             }
 
-            // Custom Validation: Check for recent submissions (within 24 hours)
-            $recentSubmission = Submission::where(function ($query) {
+            // Custom Validation: Check for duplicate submissions in the SAME BATCH (same generated_for_date)
+            $currentBatchDate = $this->qrCode->generated_for_date;
+
+            $existingSubmission = Submission::where(function ($query) {
                 $query->where('email', $this->email)
                     ->orWhere('phone', $this->phone);
             })
-                ->where('submitted_at', '>=', now()->subHours(24))
+                ->whereHas('qrCode', function ($q) use ($currentBatchDate) {
+                    $q->where('generated_for_date', $currentBatchDate);
+                })
                 ->first();
 
-            if ($recentSubmission) {
-                if ($recentSubmission->email === $this->email) {
-                    $this->addError('email', 'This email has already been used for a submission in the last 24 hours.');
+            if ($existingSubmission) {
+                if ($existingSubmission->email === $this->email) {
+                    $this->addError('email', 'This email has already been used for this event batch.');
                 }
-                if ($recentSubmission->phone === $this->phone) {
-                    $this->addError('phone', 'This phone number has already been used for a submission in the last 24 hours.');
+                if ($existingSubmission->phone === $this->phone) {
+                    $this->addError('phone', 'This phone number has already been used for this event batch.');
                 }
                 return;
             }

@@ -10,7 +10,7 @@ class Submission extends Model
 {
     use HasFactory;
 
-     protected $fillable = [
+    protected $fillable = [
         'seat_qr_id',
         'name',
         'email',
@@ -53,5 +53,10 @@ class Submission extends Model
     public function scopeRecentSubmissions($query, $days = 7)
     {
         return $query->where('submitted_at', '>=', now()->subDays($days));
+    }
+
+    public function qrCode()
+    {
+        return $this->belongsTo(QRCode::class, 'seat_qr_id', 'code');
     }
 }
