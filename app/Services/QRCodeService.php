@@ -4,9 +4,15 @@ namespace App\Services;
 
 use App\Models\QRCode;
 use SimpleSoftwareIO\QrCode\Facades\QrCode as QrCodeGenerator;
+use Carbon\Carbon;
 
 class QRCodeService
 {
+    private function makeSeatCode(Carbon $batchDate, int $seatNumber): string
+    {
+        return substr(hash('sha1', $batchDate->format('c') . '-' . $seatNumber), 0, 10);
+    }
+
     public function generateQRCode(string $code, string $url): string
     {
         return QrCodeGenerator::size(300)
@@ -20,15 +26,17 @@ class QRCodeService
     {
         $baseUrl = config('app.url');
         $qrCodes = [];
+        $batchDate = now();
 
         for ($i = 1; $i <= $count; $i++) {
-            $code = str_pad($i, 3, '0', STR_PAD_LEFT);
+            $code = $this->makeSeatCode($batchDate, $i);
             $url = "{$baseUrl}/form?id={$code}";
             
             $qrCode = QRCode::create([
                 'code' => $code,
                 'seat_number' => $i,
                 'is_active' => true,
+                'generated_for_date' => $batchDate,
             ]);
 
             $qrImage = $this->generateQRCode($code, $url);

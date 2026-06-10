@@ -15,6 +15,7 @@ class QRManagement extends Component
     public $showModal = false;
     public $showEditModal = false;
     public $editBatchId;
+    public $editBatchTime;
     public $editStartSeat;
     public $editEndSeat;
     public $totalQRCodes;
@@ -35,9 +36,11 @@ class QRManagement extends Component
         $this->activeQRCodes = QRCode::where('is_active', true)->count();
         $this->usedQRCodes = QRCode::whereNotNull('last_used_at')->count();
 
-        // Get batches grouped by creation timestamp (hour granularity for separate entries)
+        $batchExpression = 'COALESCE(generated_for_date, created_at)';
+
+        // Group by the show timestamp so each show can reuse seat numbers from 1.
         $this->qrBatches = QRCode::select(
-            DB::raw('DATE_FORMAT(created_at, "%Y-%m-%d %H:%i") as batch_time'),
+            DB::raw("{$batchExpression} as batch_time"),
             DB::raw('MIN(id) as batch_id'),
             DB::raw('COUNT(*) as total_codes'),
             DB::raw('SUM(CASE WHEN last_used_at IS NOT NULL THEN 1 ELSE 0 END) as used_codes'),
@@ -47,9 +50,14 @@ class QRManagement extends Component
             DB::raw('MAX(created_at) as created_at'),
             DB::raw('MAX(generated_for_date) as generated_for_date')
         )
-        ->groupBy('batch_time')
+        ->groupBy(DB::raw($batchExpression))
         ->orderBy('created_at', 'desc')
         ->get();
+    }
+
+    private function makeSeatCode(Carbon $batchDate, int $seatNumber): string
+    {
+        return substr(hash('sha1', $batchDate->format('c') . '-' . $seatNumber), 0, 10);
     }
 
     public function openModal()
@@ -71,12 +79,11 @@ class QRManagement extends Component
             'generationDate' => 'required|date_format:Y-m-d\TH:i',
         ]);
 
-        $lastSeat = QRCode::max('seat_number') ?? 0;
         $generationDateTime = Carbon::createFromFormat('Y-m-d\TH:i', $this->generationDate);
 
         for ($i = 1; $i <= $this->qrCount; $i++) {
-            $seatNumber = $lastSeat + $i;
-            $code = str_pad($seatNumber, 3, '0', STR_PAD_LEFT);
+            $seatNumber = $i;
+            $code = $this->makeSeatCode($generationDateTime, $seatNumber);
 
             $qrCode = QRCode::create([
                 'code' => $code,
@@ -96,17 +103,18 @@ class QRManagement extends Component
         $this->loadData();
     }
 
-    public function deleteBatch($firstSeat, $lastSeat)
+    public function deleteBatch($batchTime)
     {
-        QRCode::whereBetween('seat_number', [$firstSeat, $lastSeat])->delete();
+        QRCode::where('generated_for_date', Carbon::parse($batchTime))->delete();
         
         session()->flash('success', 'Batch deleted successfully!');
         $this->loadData();
     }
 
-    public function openEditModal($firstSeat, $lastSeat, $batchId)
+    public function openEditModal($firstSeat, $lastSeat, $batchTime, $batchId)
     {
         $this->editBatchId = $batchId;
+        $this->editBatchTime = $batchTime;
         $this->editStartSeat = $firstSeat;
         $this->editEndSeat = $lastSeat;
         $this->showEditModal = true;
@@ -116,6 +124,7 @@ class QRManagement extends Component
     {
         $this->showEditModal = false;
         $this->editBatchId = null;
+        $this->editBatchTime = null;
         $this->editStartSeat = null;
         $this->editEndSeat = null;
     }
@@ -123,12 +132,15 @@ class QRManagement extends Component
     public function updateBatch()
     {
         $this->validate([
+            'editBatchTime' => 'required|date',
             'editStartSeat' => 'required|integer|min:1',
             'editEndSeat' => 'required|integer|min:' . $this->editStartSeat,
         ]);
 
+        $batchDate = Carbon::parse($this->editBatchTime);
+
         // Get current batch QR codes
-        $qrCodes = QRCode::whereBetween('seat_number', [$this->editStartSeat, $this->editEndSeat])
+        $qrCodes = QRCode::where('generated_for_date', $batchDate)
             ->orderBy('seat_number')
             ->get();
 
@@ -137,7 +149,7 @@ class QRManagement extends Component
             $newSeatNumber = $this->editStartSeat + $index;
             $qrCode->update([
                 'seat_number' => $newSeatNumber,
-                'code' => str_pad($newSeatNumber, 3, '0', STR_PAD_LEFT),
+                'code' => $this->makeSeatCode($batchDate, $newSeatNumber),
             ]);
         }
 
@@ -146,9 +158,10 @@ class QRManagement extends Component
         $this->loadData();
     }
 
-    public function regenerateQRCodes($firstSeat, $lastSeat)
+    public function regenerateQRCodes($batchTime)
     {
-        $qrCodes = QRCode::whereBetween('seat_number', [$firstSeat, $lastSeat])->get();
+        $batchDate = Carbon::parse($batchTime);
+        $qrCodes = QRCode::where('generated_for_date', $batchDate)->get();
 
         if ($qrCodes->isEmpty()) {
             session()->flash('error', 'No QR codes found in this range.');

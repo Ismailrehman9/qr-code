@@ -128,8 +128,8 @@
                                         </div>
                                         <div class="ml-4">
                                         @php
-                                            $generatedDate = $batch->generated_for_date
-                                                ? \Carbon\Carbon::parse($batch->generated_for_date)
+                                            $generatedDate = $batch->batch_time
+                                                ? \Carbon\Carbon::parse($batch->batch_time)
                                                 : \Carbon\Carbon::parse($batch->created_at);
                                         @endphp
                                         <div class="text-sm font-medium text-gray-900">
@@ -185,7 +185,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2">
-                                        <button wire:click="regenerateQRCodes({{ $batch->first_seat }}, {{ $batch->last_seat }})"
+                                        <button wire:click="regenerateQRCodes(@js($batch->batch_time))"
                                                 class="text-purple-600 hover:text-purple-900 transition"
                                                 title="Regenerate QR Images">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@
                                             </svg>
                                         </button>
 
-                                        <a href="{{ route('admin.download-qr', ['start' => $batch->first_seat, 'end' => $batch->last_seat]) }}"
+                                        <a href="{{ route('admin.download-qr', ['start' => $batch->first_seat, 'end' => $batch->last_seat, 'batch' => $batch->batch_time]) }}"
                                             class="text-green-600 hover:text-green-900 transition {{ $qrProgress < 100 ? 'opacity-50 pointer-events-none' : '' }}"
                                             title="{{ $qrProgress < 100 ? 'QR codes still generating...' : 'Download' }}">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@
                                             </svg>
                                         </a>
 
-                                        <a href="{{ route('admin.print-qr-batch-preview', ['start' => $batch->first_seat, 'end' => $batch->last_seat]) }}"
+                                        <a href="{{ route('admin.print-qr-batch-preview', ['start' => $batch->first_seat, 'end' => $batch->last_seat, 'batch' => $batch->batch_time]) }}"
                                             target="_blank"
                                             class="text-blue-600 hover:text-blue-900 transition"
                                             title="Print">
@@ -211,15 +211,15 @@
                                                 </svg>
                                         </a>
 
-                                        <button wire:click="openEditModal({{ $batch->first_seat }}, {{ $batch->last_seat }}, {{ $batch->batch_id }})"
+                                        <button wire:click="openEditModal({{ $batch->first_seat }}, {{ $batch->last_seat }}, @js($batch->batch_time), {{ $batch->batch_id }})"
                                                 class="text-indigo-600 hover:text-indigo-900 transition"
                                                 title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button wire:click="deleteBatch({{ $batch->first_seat }}, {{ $batch->last_seat }})"
-                                                onclick="return confirm('Are you sure you want to delete QR codes from seat #{{ $batch->first_seat }} to #{{ $batch->last_seat }}?')"
+                                        <button wire:click="deleteBatch(@js($batch->batch_time))"
+                                            onclick="return confirm('Are you sure you want to delete this batch of QR codes?')"
                                                 class="text-red-600 hover:text-red-900 transition"
                                                 title="Delete">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +278,8 @@
                             <div class="text-sm text-indigo-800">
                                 <p class="font-semibold mb-1">Generation Info</p>
                                 <p><strong>Current Total:</strong> {{ number_format($totalQRCodes) }} codes</p>
-                                <p><strong>Next Seat Number:</strong> {{ ($totalQRCodes > 0 ? \App\Models\QRCode::max('seat_number') + 1 : 1) }}</p>
+                                <p><strong>Next Seat Numbers:</strong> 1 - {{ $qrCount }}</p>
+                                <p class="mt-1 text-xs text-indigo-700">Seat numbers restart from 1 for every show.</p>
                             </div>
                         </div>
                     </div>

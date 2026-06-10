@@ -58,12 +58,12 @@
 
         /* QR Container - Full Width, No Extra Padding */
         .qr-container {
-            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
             padding: 0;
+            margin: 0.15cm 0 1.3cm;
             /* Removed side padding */
         }
 
@@ -71,7 +71,7 @@
         .qr-item {
             text-align: center;
             width: 100%;
-            max-width: 500px;
+            max-width: 280px;
             margin: 0 auto;
             /* Forces perfect center */
         }
@@ -79,21 +79,21 @@
         .qr-item img {
             width: 100%;
             height: auto;
-            max-width: 500px;
-            max-height: 500px;
+            max-width: 280px;
+            max-height: 280px;
             image-rendering: crisp-edges;
-            border: 4px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 7px;
             background: white;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
             display: block;
             margin: 0 auto;
             /* Double center */
         }
 
         .qr-item p {
-            margin-top: 16px;
+            margin-top: 6px;
             font-size: 24px;
             font-weight: 600;
             color: #1f2937;
@@ -108,7 +108,6 @@
             font-weight: 600;
             color: #111827;
             text-align: center;
-            margin-top: 1cm;
             margin-bottom: 2cm;
             width: 90%;
             line-height: 1.5;
@@ -187,15 +186,12 @@
 
     @foreach($pages as $index => $qr)
         <div class="page">
-            <!-- Heading -->
-            <div class="heading">SCAN BELOW WITH YOUR PHONE TO GET A FREE NUMEROLOGY READING!
-                EVERYONE WHO ENTERS WILL BE PLACED INTO THE MONTHLY DRAW TO
-                WIN A ZOOM READING WITH MICHAEL HIMSELF!!</div>
+            <div class="heading">WIN SPOT PRIZES TONIGHT - SCAN BELOW WITH YOUR PHONE TO GET A FREE NUMEROLOGY READING! EVERYONE WHO ENTERS WILL BE PLACED INTO A DRAW TONIGHT FOR SUPER PRIZES!</div>
 
             <!-- QR Code - DEAD CENTER -->
             <div class="qr-container">
                 <div class="qr-item">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&data={{ urlencode($qr->url) }}"
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=420x420&data={{ urlencode($qr->url) }}"
                         alt="QR {{ $qr->seat_number }}">
                 </div>
             </div>
@@ -206,10 +202,6 @@
                 the team at the front of the stage will scan the QR code for you.
             </div>
 
-            <!-- Page Number -->
-            <div class="page-number">
-                Page {{ $index + 1 }} of {{ $pages->count() }}
-            </div>
         </div>
     @endforeach
 

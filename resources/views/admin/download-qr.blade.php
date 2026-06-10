@@ -70,7 +70,7 @@
         .qr-card {
             background: white;
             border-radius: 8px;
-            padding: 20px;
+            padding: 14px;
             text-align: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             break-inside: avoid;
@@ -88,8 +88,8 @@
         }
         
         .qr-code img {
-            width: 180px;
-            height: 180px;
+            width: 140px;
+            height: 140px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
         }
@@ -157,7 +157,7 @@
                 <div class="seat-number">Seat #{{ $qrCode->seat_number }}</div>
                 
                 <div class="qr-code">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(config('app.url') . '/form?id=' . $qrCode->code) }}" 
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode(config('app.url') . '/form?id=' . $qrCode->code) }}" 
                          alt="QR Code {{ $qrCode->code }}">
                 </div>
                 

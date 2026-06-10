@@ -217,12 +217,13 @@ class SubmissionForm extends Component
         $credentialsPath = config('services.google.credentials_path');
         $spreadsheetId = env('GOOGLE_SHEET_ID');
 
-        if (!$credentialsPath || !file_exists($credentialsPath)) {
+        $absolutePath = storage_path($credentialsPath);
+        if (!$credentialsPath || !file_exists($absolutePath)) {
             \Log::error('Google credentials file not found: ' . $credentialsPath);
             return false;
         }
 
-        $credentials = json_decode(file_get_contents($credentialsPath), true);
+        $credentials = json_decode(file_get_contents($absolutePath), true);
         $token = $this->getGoogleAccessToken($credentials);
 
         if (!$token) {

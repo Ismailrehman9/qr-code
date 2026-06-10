@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\QRCode;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class QRPrintController extends Controller
@@ -11,10 +12,15 @@ class QRPrintController extends Controller
     {
         $start = $request->query('start');
         $end   = $request->query('end');
+        $batch = $request->query('batch');
 
-        $qrCodes = QRCode::whereBetween('seat_number', [$start, $end])
-                         ->orderBy('seat_number')
-                         ->get();
+        $query = QRCode::whereBetween('seat_number', [$start, $end]);
+
+        if ($batch) {
+            $query->where('generated_for_date', Carbon::parse($batch));
+        }
+
+        $qrCodes = $query->orderBy('seat_number')->get();
 
         if ($qrCodes->isEmpty()) {
             return redirect()->back()->with('error', 'No QR codes found.');
@@ -30,7 +36,7 @@ class QRPrintController extends Controller
 
         return view('print.qr-batch', [
             'pages' => $pages,
-            'batchRange' => "#{$start} – #{$end}",
+            'batchRange' => $batch ? Carbon::parse($batch)->format('M d, Y h:i A') : "#{$start} – #{$end}",
             'totalCodes' => $qrCodes->count(),
         ]);
     }

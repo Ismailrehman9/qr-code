@@ -14,10 +14,9 @@ class GeminiJokeService
     public function __construct()
     {
         $this->apiKey = config('services.gemini.key');
-        $this->model = config('services.gemini.model', 'gemini-2.0-flash-lite');
+        $this->model = config('services.gemini.model', 'gemini-2.5-flash');
         $this->fallbackModels = config('services.gemini.fallback_models', [
             'gemini-2.0-flash',
-            'gemini-2.5-flash',
         ]);
     }
 
@@ -91,7 +90,7 @@ class GeminiJokeService
                 ],
                 'generationConfig' => [
                     'temperature' => 0.85,
-                    'maxOutputTokens' => 400,
+                    'maxOutputTokens' => 2048,
                 ],
                 'safetySettings' => [
                     [
